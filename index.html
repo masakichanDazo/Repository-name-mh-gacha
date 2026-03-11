@@ -143,21 +143,35 @@ let deathCount = 0;
 let lastWeapon = "";
 let lastMonster = "";
 
+// ----- 武器 -----
 const weapons = ["大剣","太刀","片手剣","双剣","ハンマー","狩猟笛","ランス",
 "ガンランス","スラッシュアックス","チャージアックス",
 "操虫棍","ライトボウガン","ヘビィボウガン","弓"];
 
-const monstersAll = ["リオレウス","リオレイア","ナルガクルガ","ジンオウガ",
-"ゴシャハギ","マガイマガド","バゼルギウス",
-"メルゼナ","ルナガロン","ガランゴルム"];
+// ----- モンスター（ライズ＋サンブレイク主要モンスター） -----
+const monstersAll = [
+"アオアシラ","アルメッドロン","アマツマガツチ","ウルクスス",
+"イソネミクニ","イヴェルカーナ","エスピナス","オロミドロ",
+"ガランゴルム","ガイアドゥルム","クシャルダオラ","ゴア・マガラ",
+"原初を刻むメルゼナ","ショウグンキザミ","セルレギオス","タマミツネ",
+"テオテスカトル","トビカダキ","ナルガクルガ","ビシュテンゴ",
+"フルフル","ブジャテンゴ","プケプケ","ヘビィ・ドボル",
+"ラージャン","ティガレックス","リオレウス","シルバーリオレウス",
+"リオレイア","ゴールドリオレイア"
+];
 
-const monstersDanger = ["激昂ラージャン","紅蓮滾るバゼルギウス","奇しき赫耀のバルファルク"];
+const monstersDanger = [
+"原初を刻むメルゼナ","テオテスカトル","クシャルダオラ",
+"ラージャン","セルレギオス","イヴェルカーナ"
+];
 
+// ----- 縛り -----
 const easyRules=["閃光禁止","砥石3回"];
 const normalRules=["回復禁止","捕獲禁止"];
 const hellRules=["回復禁止","回避禁止","装備なし","裸で討伐","アイテム禁止"];
 const jokeRules=["オトモ任せ","操竜のみ","粉塵係"];
 
+// ----- 統計 -----
 let weaponStats = JSON.parse(localStorage.getItem("weaponStats")||"{}");
 let monsterStats = JSON.parse(localStorage.getItem("monsterStats")||"{}");
 
@@ -172,11 +186,8 @@ function rollGacha() {
         weapon = weapons[Math.floor(Math.random()*weapons.length)];
         lastWeapon = weapon;
         document.getElementById("weapon").textContent = "武器：" + weapon;
-        if(weapon==="片手剣"){
-            document.getElementById("weapon").textContent += " ✨片手剣チャンス！✨";
-        }
+        if(weapon==="片手剣") document.getElementById("weapon").textContent += " ✨片手剣チャンス！✨";
 
-        // 初出の武器だけ統計初期化
         if(!weaponStats[weapon]){
             weaponStats[weapon] = { "0乙":0, "1乙":0, "2乙":0, "3乙":0 };
         }
@@ -187,10 +198,7 @@ function rollGacha() {
 
     // モンスター
     if(document.getElementById("monsterToggle").value==="on"){
-        let list = monstersAll;
-        if(document.getElementById("monsterType").value==="danger"){
-            list = monstersDanger;
-        }
+        let list = document.getElementById("monsterType").value==="danger" ? monstersDanger : monstersAll;
         monster = list[Math.floor(Math.random()*list.length)];
         lastMonster = monster;
         document.getElementById("monster").textContent="モンスター："+monster;
@@ -221,56 +229,37 @@ function rollGacha() {
 // ----- 死亡カウント -----
 function addDeath(){
     if(!lastWeapon) return;
+    if(deathCount >= 3) return;
 
-    if(deathCount >= 3) return; // 3乙以上はカウントしない
     deathCount++;
     document.getElementById("deathCounter").textContent = "現在："+deathCount+"乙";
 
-    if(deathCount >=3){
-        alert("💀 クエスト失敗！");
-    }
+    if(deathCount >=3) alert("💀 クエスト失敗！");
 
-    let key = deathCount >=3 ? "3乙" : deathCount+"乙";
+    let key = deathCount>=3?"3乙":deathCount+"乙";
     weaponStats[lastWeapon][key]++;
 
     saveStats();
     drawStats();
 }
 
-// ----- 統計描画 -----
+// ----- 統計描画（数値表示のみ） -----
 function drawStats(){
     let ws = document.getElementById("weaponStats");
     ws.innerHTML = "";
-
     for(let w of Object.keys(weaponStats)){
         let s = weaponStats[w];
-        let total = s["0乙"]+s["1乙"]+s["2乙"]+s["3乙"];
+        let total = s["0乙"] + s["1乙"] + s["2乙"] + s["3乙"];
         if(total===0) continue;
-
-        let bar0 = Math.round(s["0乙"]/total*200);
-        let bar1 = Math.round(s["1乙"]/total*200);
-        let bar2 = Math.round(s["2乙"]/total*200);
-        let bar3 = Math.round(s["3乙"]/total*200);
-
-        ws.innerHTML += `
-        <div style="margin:4px 0;">
-            ${w}
-            <div style="display:flex; height:20px; border:1px solid #000; width:200px; box-sizing:border-box;">
-                <div style="width:${bar0}px; background-color:#4caf50;" title="0乙"></div>
-                <div style="width:${bar1}px; background-color:#ffeb3b;" title="1乙"></div>
-                <div style="width:${bar2}px; background-color:#ff9800;" title="2乙"></div>
-                <div style="width:${bar3}px; background-color:#f44336;" title="3乙"></div>
-            </div>
-        </div>`;
+        ws.innerHTML += `${w} → 0乙:${s["0乙"]} 1乙:${s["1乙"]} 2乙:${s["2乙"]} 失敗:${s["3乙"]} (計:${total})<br>`;
     }
 
-    // 死亡率ランキング
     let ds = document.getElementById("deathStats");
     ds.innerHTML = "<b>💀 死亡率ランキング 💀</b><br>";
     let ranking = [];
     for(let w of Object.keys(weaponStats)){
         let s = weaponStats[w];
-        let total = s["0乙"]+s["1乙"]+s["2乙"]+s["3乙"];
+        let total = s["0乙"] + s["1乙"] + s["2乙"] + s["3乙"];
         if(total===0) continue;
         let fail = s["3乙"];
         let rate = Math.round(fail/total*100);
