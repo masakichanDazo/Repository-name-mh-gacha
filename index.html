@@ -195,9 +195,7 @@ document.getElementById("weapon").textContent="武器："+weapon;
 
 if(weapon==="片手剣"){
 document.getElementById("weapon").textContent+=" ✨片手剣チャンス！✨";
-
-deathCount = 0;
-document.getElementById("deathCounter").textContent = "現在：0乙";}
+}
 
 weaponStats[weapon]=(weaponStats[weapon]||0)+1;
 
@@ -248,7 +246,9 @@ lastResult=weapon+" × "+monster+" × "+rule;
 saveStats();
 drawStats();
 
-}
+
+deathCount = 0;
+document.getElementById("deathCounter").textContent = "現在：0乙";}
 
 function success(){
 addHistory("成功");
