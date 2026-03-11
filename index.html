@@ -217,6 +217,8 @@ if(diff==="joke")arr=jokeRules;
 rule=arr[Math.floor(Math.random()*arr.length)];
 document.getElementById("rule").textContent="縛り："+rule;
 
+}else{
+document.getElementById("rule").textContent="";
 }
 
 lastResult=weapon+" × "+monster+" × "+rule;
