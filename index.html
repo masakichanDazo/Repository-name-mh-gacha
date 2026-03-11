@@ -164,10 +164,12 @@ let weaponStats = JSON.parse(localStorage.getItem("weaponStats")||"{}");
 let monsterStats = JSON.parse(localStorage.getItem("monsterStats")||"{}");
 let deathStats = JSON.parse(localStorage.getItem("deathStats")||"{}");
 
-// 武器統計の初期化
-for(let w of weapons){
-    if(!weaponStats[w]){
-        weaponStats[w] = { "0乙":0, "1乙":0, "2乙":0, "3乙":0 };
+// 初期化関数
+function initWeaponStats() {
+    for(let w of weapons){
+        if(!weaponStats[w]){
+            weaponStats[w] = { "0乙":0, "1乙":0, "2乙":0, "3乙":0 };
+        }
     }
 }
 
@@ -186,6 +188,11 @@ function rollGacha() {
         document.getElementById("weapon").textContent = "武器：" + weapon;
         if(weapon==="片手剣"){
             document.getElementById("weapon").textContent += " ✨片手剣チャンス！✨";
+        }
+
+        // 初期化
+        if(!weaponStats[weapon]){
+            weaponStats[weapon] = { "0乙":0, "1乙":0, "2乙":0, "3乙":0 };
         }
     } else {
         document.getElementById("weapon").textContent="";
@@ -253,7 +260,11 @@ function drawStats(){
     for(let w of weapons){
         let s = weaponStats[w];
         let total = s["0乙"] + s["1乙"] + s["2乙"] + s["3乙"];
-        if(total===0) total=1;
+
+        if(total === 0){
+            ws.innerHTML += `${w} → 0乙:0 1乙:0 2乙:0 失敗:0<br>`;
+            continue;
+        }
 
         let bar0 = Math.round(s["0乙"]/total*200);
         let bar1 = Math.round(s["1乙"]/total*200);
@@ -300,13 +311,17 @@ function saveStats(){
 // ----- リセット -----
 function resetStats(){
     weaponStats={};
+    for(let w of weapons){
+        weaponStats[w] = { "0乙":0, "1乙":0, "2乙":0, "3乙":0 };
+    }
     monsterStats={};
     deathStats={};
     localStorage.clear();
     drawStats();
 }
 
-// 初期表示
+// 初期化
+initWeaponStats();
 drawStats();
 </script>
 
