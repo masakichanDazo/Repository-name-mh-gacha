@@ -164,20 +164,10 @@ let weaponStats = JSON.parse(localStorage.getItem("weaponStats")||"{}");
 let monsterStats = JSON.parse(localStorage.getItem("monsterStats")||"{}");
 let deathStats = JSON.parse(localStorage.getItem("deathStats")||"{}");
 
-// 初期化関数
-function initWeaponStats() {
-    for(let w of weapons){
-        if(!weaponStats[w]){
-            weaponStats[w] = { "0乙":0, "1乙":0, "2乙":0, "3乙":0 };
-        }
-    }
-}
-
 // ----- ガチャを回す -----
 function rollGacha() {
     let weapon="", monster="", rule="";
 
-    // まず死亡カウントをリセット
     deathCount = 0;
     document.getElementById("deathCounter").textContent = "現在：0乙";
 
@@ -190,10 +180,10 @@ function rollGacha() {
             document.getElementById("weapon").textContent += " ✨片手剣チャンス！✨";
         }
 
-        // 初期化
         if(!weaponStats[weapon]){
             weaponStats[weapon] = { "0乙":0, "1乙":0, "2乙":0, "3乙":0 };
         }
+
     } else {
         document.getElementById("weapon").textContent="";
         lastWeapon="";
@@ -237,7 +227,7 @@ function rollGacha() {
 
 // ----- 死亡カウント -----
 function addDeath(){
-    if(!lastWeapon) return; // 武器が選ばれてない場合は無視
+    if(!lastWeapon) return;
     deathCount++;
     document.getElementById("deathCounter").textContent = "現在："+deathCount+"乙";
 
@@ -245,26 +235,22 @@ function addDeath(){
         alert("💀 クエスト失敗！");
     }
 
-    // 武器統計に反映
-    let key = deathCount >=3 ? "3乙" : deathCount + "乙";
+    let key = deathCount>=3 ? "3乙" : deathCount+"乙";
     weaponStats[lastWeapon][key]++;
     saveStats();
     drawStats();
 }
 
-// ----- 統計更新（グラフ表示） -----
+// ----- 統計更新 -----
 function drawStats(){
     let ws = document.getElementById("weaponStats");
     ws.innerHTML = "";
 
-    for(let w of weapons){
+    // 出現した武器だけ描画
+    for(let w of Object.keys(weaponStats)){
         let s = weaponStats[w];
-        let total = s["0乙"] + s["1乙"] + s["2乙"] + s["3乙"];
-
-        if(total === 0){
-            ws.innerHTML += `${w} → 0乙:0 1乙:0 2乙:0 失敗:0<br>`;
-            continue;
-        }
+        let total = s["0乙"]+s["1乙"]+s["2乙"]+s["3乙"];
+        if(total===0) continue;
 
         let bar0 = Math.round(s["0乙"]/total*200);
         let bar1 = Math.round(s["1乙"]/total*200);
@@ -287,15 +273,15 @@ function drawStats(){
     let ds = document.getElementById("deathStats");
     ds.innerHTML = "<b>💀 死亡率ランキング 💀</b><br>";
     let ranking = [];
-    for(let w of weapons){
+    for(let w of Object.keys(weaponStats)){
         let s = weaponStats[w];
-        let total = s["0乙"] + s["1乙"] + s["2乙"] + s["3乙"];
+        let total = s["0乙"]+s["1乙"]+s["2乙"]+s["3乙"];
+        if(total===0) continue;
         let fail = s["3乙"];
-        let rate = total>0 ? Math.round(fail/total*100) : 0;
+        let rate = Math.round(fail/total*100);
         ranking.push({weapon:w, rate:rate});
     }
     ranking.sort((a,b)=>b.rate - a.rate);
-
     ranking.forEach((r,i)=>{
         ds.innerHTML += `${i+1}. ${r.weapon} → ${r.rate}%<br>`;
     });
@@ -311,17 +297,12 @@ function saveStats(){
 // ----- リセット -----
 function resetStats(){
     weaponStats={};
-    for(let w of weapons){
-        weaponStats[w] = { "0乙":0, "1乙":0, "2乙":0, "3乙":0 };
-    }
     monsterStats={};
     deathStats={};
     localStorage.clear();
     drawStats();
 }
 
-// 初期化
-initWeaponStats();
 drawStats();
 </script>
 
