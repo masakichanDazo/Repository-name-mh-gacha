@@ -220,9 +220,9 @@ function rollGacha() {
 
     lastResult = weapon+" × "+monster+" × "+rule;
 
-    // 統計更新（0〜3乙）
+    // ガチャ結果表示後に統計更新
     if(lastWeapon){
-        let key = deathCount >= 3 ? "3乙" : deathCount+"乙";
+        let key = deathCount >= 3 ? "3乙" : deathCount + "乙";
         weaponStats[lastWeapon][key]++;
     }
 
@@ -243,19 +243,37 @@ function addDeath(){
     }
 }
 
-// ----- 統計更新 -----
+// ----- 統計更新（グラフ表示） -----
 function drawStats(){
-    // 武器統計
     let ws = document.getElementById("weaponStats");
     ws.innerHTML = "";
+
     for(let w of weapons){
         let s = weaponStats[w];
-        ws.innerHTML += `${w} → 0乙:${s["0乙"]} 1乙:${s["1乙"]} 2乙:${s["2乙"]} 失敗:${s["3乙"]}\n`;
+        let total = s["0乙"] + s["1乙"] + s["2乙"] + s["3乙"];
+        if(total===0) total=1; // 割合計算のゼロ除算防止
+
+        // 棒グラフ作成
+        let bar0 = Math.round(s["0乙"]/total*100);
+        let bar1 = Math.round(s["1乙"]/total*100);
+        let bar2 = Math.round(s["2乙"]/total*100);
+        let bar3 = Math.round(s["3乙"]/total*100);
+
+        ws.innerHTML += `
+        <div style="margin:4px 0;">
+            ${w} 
+            <div style="display:flex; height:20px; width:200px; border:1px solid #000;">
+                <div style="width:${bar0}%; background-color:#4caf50;" title="0乙"></div>
+                <div style="width:${bar1}%; background-color:#ffeb3b;" title="1乙"></div>
+                <div style="width:${bar2}%; background-color:#ff9800;" title="2乙"></div>
+                <div style="width:${bar3}%; background-color:#f44336;" title="3乙"></div>
+            </div>
+        </div>`;
     }
 
     // 死亡率ランキング
     let ds = document.getElementById("deathStats");
-    ds.innerHTML = "";
+    ds.innerHTML = "<b>💀 死亡率ランキング 💀</b><br>";
     let ranking = [];
     for(let w of weapons){
         let s = weaponStats[w];
@@ -266,9 +284,8 @@ function drawStats(){
     }
     ranking.sort((a,b)=>b.rate - a.rate);
 
-    ds.innerHTML += "\n💀 死亡率ランキング 💀\n";
     ranking.forEach((r,i)=>{
-        ds.innerHTML += `${i+1}. ${r.weapon} → ${r.rate}%\n`;
+        ds.innerHTML += `${i+1}. ${r.weapon} → ${r.rate}%<br>`;
     });
 
     saveStats();
