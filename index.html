@@ -227,20 +227,26 @@ function rollGacha() {
 
 // ----- 死亡カウント -----
 function addDeath(){
-    if(!lastWeapon) return;
+    if(!lastWeapon) return; // 武器が選ばれてない場合は無視
+
+    // すでに3乙なら増やさない
+    if(deathCount >= 3) return;
+
     deathCount++;
     document.getElementById("deathCounter").textContent = "現在："+deathCount+"乙";
 
+    // 3乙になったらクエスト失敗
     if(deathCount >=3){
         alert("💀 クエスト失敗！");
     }
 
-    let key = deathCount>=3 ? "3乙" : deathCount+"乙";
+    // 武器統計に反映
+    let key = deathCount >=3 ? "3乙" : deathCount+"乙";
+
     weaponStats[lastWeapon][key]++;
     saveStats();
     drawStats();
 }
-
 // ----- 統計更新 -----
 function drawStats(){
     let ws = document.getElementById("weaponStats");
