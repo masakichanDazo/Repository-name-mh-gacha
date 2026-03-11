@@ -2,140 +2,318 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>MHガチャ</title>
+<title>モンハンガチャ！</title>
 <style>
-body { font-family:sans-serif; padding:10px; }
-button { margin-right:5px; margin-top:5px; }
-#weaponStats div, #monsterStats div { 
-  background-color:#4fa; 
-  margin:3px 0; 
-  padding:2px 5px; 
-  border-radius:4px; 
-  color:#000;
+body{
+background:#111;
+color:#eee;
+font-family:sans-serif;
+text-align:center;
+padding:40px;
 }
-#successFailStats { margin-top:10px; }
+
+h1{
+color:#d4af37;
+font-size:40px;
+}
+
+button{
+padding:10px 20px;
+margin:10px;
+font-size:18px;
+background:#d4af37;
+border:none;
+border-radius:6px;
+cursor:pointer;
+}
+
+select{
+padding:6px;
+margin:6px;
+}
+
+.result{
+font-size:28px;
+margin-top:20px;
+color:#7bd6ff;
+}
+
+.rule{
+color:#ff7b7b;
+font-size:20px;
+}
+
+.section{
+margin-top:40px;
+}
+
+.bar{
+background:#444;
+margin:4px auto;
+width:300px;
+text-align:left;
+}
+
+.bar span{
+display:block;
+background:#7bd6ff;
+height:20px;
+}
+
 </style>
 </head>
+
 <body>
 
-<h2>モンハンガチャ</h2>
+<h1>モンハンガチャ！</h1>
 
-<button onclick="rollGacha()">ガチャを回す</button>
+<div>
+
+武器ガチャ
+<select id="weaponToggle">
+<option value="on">ON</option>
+<option value="off">OFF</option>
+</select>
+
+モンスターガチャ
+<select id="monsterToggle">
+<option value="off">OFF</option>
+<option value="on">ON</option>
+</select>
+
+<select id="monsterType">
+<option value="all">全大型</option>
+<option value="danger">危険モンスター</option>
+</select>
+
+</div>
+
+<div>
+
+縛り
+<select id="ruleToggle">
+<option value="off">なし</option>
+<option value="on">あり</option>
+</select>
+
+<select id="difficulty">
+<option value="easy">ゆるめ</option>
+<option value="normal">ふつう</option>
+<option value="hell">地獄</option>
+<option value="joke">ネタ</option>
+</select>
+
+</div>
+
+<button onclick="rollGacha()">ガチャを回す！</button>
+
+<div class="result" id="weapon"></div>
+<div class="result" id="monster"></div>
+<div class="rule" id="rule"></div>
+
+<div>
+<button onclick="success()">成功</button>
+<button onclick="fail()">失敗</button>
 <button onclick="resetStats()">統計リセット</button>
-<button onclick="markSuccess()">成功</button>
-<button onclick="markFail()">失敗</button>
+</div>
 
-<p id="weapon"></p>
-<p id="monster"></p>
-<p id="rule"></p>
+<div class="section">
+<h2>履歴</h2>
+<ul id="history"></ul>
+</div>
 
-<h3>武器統計（出た武器のみ）</h3>
+<div class="section">
+<h2>武器統計</h2>
 <div id="weaponStats"></div>
+</div>
 
-<h3>成功/失敗回数</h3>
-<div id="successFailStats"></div>
+<div class="section">
+<h2>モンスター統計</h2>
+<div id="monsterStats"></div>
+</div>
+
+<div class="section">
+<h2>死亡率ランキング</h2>
+<ul id="deathStats"></ul>
+</div>
 
 <script>
-// ----- 初期化 -----
-let weaponStats = JSON.parse(localStorage.getItem("weaponStats") || "{}");
-let successFailStats = JSON.parse(localStorage.getItem("successFailStats") || '{"success":0,"fail":0}');
 
-let lastWeapon = "";
-let lastMonster = "";
-let lastRule = "";
-
-// ----- 武器・モンスター・縛り -----
-const weapons = ["大剣","太刀","片手剣","双剣","ハンマー","狩猟笛","ランス",
+const weapons=[
+"大剣","太刀","片手剣","双剣","ハンマー","狩猟笛","ランス",
 "ガンランス","スラッシュアックス","チャージアックス",
-"操虫棍","ライトボウガン","ヘビィボウガン","弓"];
+"操虫棍","ライトボウガン","ヘビィボウガン","弓"
+];
 
-const monstersAll = [
-"アオアシラ","アルメッドロン","アマツマガツチ","ウルクスス",
-"イソネミクニ","イヴェルカーナ","エスピナス","オロミドロ",
-"ガランゴルム","ガイアドゥルム","クシャルダオラ","ゴア・マガラ",
-"原初を刻むメルゼナ","ショウグンキザミ","セルレギオス","タマミツネ",
-"テオテスカトル","トビカダキ","ナルガクルガ","ビシュテンゴ",
-"フルフル","ブジャテンゴ","プケプケ","ヘビィ・ドボル",
-"ラージャン","ティガレックス","リオレウス","シルバーリオレウス",
-"リオレイア","ゴールドリオレイア"
+const monstersAll=[
+"リオレウス","リオレイア","ナルガクルガ","ジンオウガ",
+"ゴシャハギ","マガイマガド","バゼルギウス",
+"メルゼナ","ルナガロン","ガランゴルム"
+];
+
+const monstersDanger=[
+"激昂ラージャン","紅蓮滾るバゼルギウス","奇しき赫耀のバルファルク"
 ];
 
 const easyRules=["閃光禁止","砥石3回"];
 const normalRules=["回復禁止","捕獲禁止"];
-const hellRules=["回復禁止","回避禁止","装備なし","裸で討伐","アイテム禁止"];
+const hellRules=["防具なし","アイテム持込禁止"];
 const jokeRules=["オトモ任せ","操竜のみ","粉塵係"];
 
-// ----- ガチャ -----
-function rollGacha() {
-    // 武器
-    let weapon = weapons[Math.floor(Math.random()*weapons.length)];
-    lastWeapon = weapon;
-    document.getElementById("weapon").textContent = "武器：" + weapon;
-    if(!weaponStats[weapon]) weaponStats[weapon] = 0;
-    weaponStats[weapon]++;
+let weaponStats=JSON.parse(localStorage.getItem("weaponStats")||"{}");
+let monsterStats=JSON.parse(localStorage.getItem("monsterStats")||"{}");
+let deathStats=JSON.parse(localStorage.getItem("deathStats")||"{}");
 
-    // モンスター
-    let monster = monstersAll[Math.floor(Math.random()*monstersAll.length)];
-    lastMonster = monster;
-    document.getElementById("monster").textContent = "モンスター：" + monster;
+let lastWeapon="";
+let lastMonster="";
+let lastResult="";
 
-    // 縛り
-    let diff = "normal"; // 任意で変更可能
-    let arr = normalRules;
-    if(diff==="easy") arr = easyRules;
-    if(diff==="hell") arr = hellRules;
-    if(diff==="joke") arr = jokeRules;
-    let rule = arr[Math.floor(Math.random()*arr.length)];
-    lastRule = rule;
-    document.getElementById("rule").textContent = "縛り：" + rule;
+function rollGacha(){
 
-    saveStats();
-    drawStats();
+let weapon="";
+let monster="";
+let rule="";
+
+if(document.getElementById("weaponToggle").value==="on"){
+weapon=weapons[Math.floor(Math.random()*weapons.length)];
+lastWeapon=weapon;
+document.getElementById("weapon").textContent="武器："+weapon;
+
+if(weapon==="片手剣"){
+document.getElementById("weapon").textContent+=" ✨片手剣チャンス！✨";
 }
 
-// ----- 成功/失敗カウント -----
-function markSuccess(){
-    successFailStats.success++;
-    saveStats();
-    drawStats();
+weaponStats[weapon]=(weaponStats[weapon]||0)+1;
+
 }
 
-function markFail(){
-    successFailStats.fail++;
-    saveStats();
-    drawStats();
+if(document.getElementById("monsterToggle").value==="on"){
+
+let list=monstersAll;
+
+if(document.getElementById("monsterType").value==="danger"){
+list=monstersDanger;
 }
 
-// ----- 描画 -----
-function drawStats(){
-    let ws = document.getElementById("weaponStats");
-    ws.innerHTML = "";
-    for(let w of Object.keys(weaponStats)){
-        let div = document.createElement("div");
-        div.textContent = `${w} → ${weaponStats[w]}回`;
-        ws.appendChild(div);
-    }
+monster=list[Math.floor(Math.random()*list.length)];
+lastMonster=monster;
 
-    let sf = document.getElementById("successFailStats");
-    sf.innerHTML = `成功：${successFailStats.success}回<br>失敗：${successFailStats.fail}回`;
+document.getElementById("monster").textContent="モンスター："+monster;
+
+monsterStats[monster]=(monsterStats[monster]||0)+1;
+
 }
 
-// ----- 保存 -----
-function saveStats(){
-    localStorage.setItem("weaponStats", JSON.stringify(weaponStats));
-    localStorage.setItem("successFailStats", JSON.stringify(successFailStats));
+if(document.getElementById("ruleToggle").value==="on"){
+
+let diff=document.getElementById("difficulty").value;
+let arr=[];
+
+if(diff==="easy")arr=easyRules;
+if(diff==="normal")arr=normalRules;
+if(diff==="hell")arr=hellRules;
+if(diff==="joke")arr=jokeRules;
+
+rule=arr[Math.floor(Math.random()*arr.length)];
+document.getElementById("rule").textContent="縛り："+rule;
+
 }
 
-// ----- リセット -----
-function resetStats(){
-    weaponStats = {};
-    successFailStats = {"success":0,"fail":0};
-    localStorage.clear();
-    drawStats();
-}
+lastResult=weapon+" × "+monster+" × "+rule;
 
-// 最初に描画
+saveStats();
 drawStats();
+
+}
+
+function success(){
+addHistory("成功");
+}
+
+function fail(){
+
+if(lastMonster){
+deathStats[lastMonster]=(deathStats[lastMonster]||0)+1;
+}
+
+addHistory("失敗");
+
+saveStats();
+drawStats();
+
+}
+
+function addHistory(result){
+
+let li=document.createElement("li");
+li.textContent=lastResult+" → "+result;
+document.getElementById("history").appendChild(li);
+
+}
+
+function saveStats(){
+
+localStorage.setItem("weaponStats",JSON.stringify(weaponStats));
+localStorage.setItem("monsterStats",JSON.stringify(monsterStats));
+localStorage.setItem("deathStats",JSON.stringify(deathStats));
+
+}
+
+function drawStats(){
+
+let ws=document.getElementById("weaponStats");
+ws.innerHTML="";
+
+for(let w in weaponStats){
+
+let div=document.createElement("div");
+div.className="bar";
+div.innerHTML=w+" ("+weaponStats[w]+")<span style='width:"+weaponStats[w]*20+"px'></span>";
+
+ws.appendChild(div);
+
+}
+
+let ms=document.getElementById("monsterStats");
+ms.innerHTML="";
+
+for(let m in monsterStats){
+
+let div=document.createElement("div");
+div.className="bar";
+div.innerHTML=m+" ("+monsterStats[m]+")<span style='width:"+monsterStats[m]*20+"px'></span>";
+
+ms.appendChild(div);
+
+}
+
+let ds=document.getElementById("deathStats");
+ds.innerHTML="";
+
+let sorted=Object.entries(deathStats).sort((a,b)=>b[1]-a[1]);
+
+sorted.forEach(([m,v])=>{
+let li=document.createElement("li");
+li.textContent=m+" : "+v+"回失敗";
+ds.appendChild(li);
+});
+
+}
+
+function resetStats(){
+
+weaponStats={};
+monsterStats={};
+deathStats={};
+
+localStorage.clear();
+
+drawStats();
+
+}
+
+drawStats();
+
 </script>
 
 </body>
