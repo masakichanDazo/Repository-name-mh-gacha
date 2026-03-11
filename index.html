@@ -159,9 +159,17 @@ const normalRules=["回復禁止","捕獲禁止"];
 const hellRules=["回復禁止","回避禁止","装備なし","裸で討伐","アイテム禁止"];
 const jokeRules=["オトモ任せ","操竜のみ","粉塵係"];
 
+// ローカル読み込み
 let weaponStats = JSON.parse(localStorage.getItem("weaponStats")||"{}");
 let monsterStats = JSON.parse(localStorage.getItem("monsterStats")||"{}");
 let deathStats = JSON.parse(localStorage.getItem("deathStats")||"{}");
+
+// 欠けている武器を初期化
+for(let w of weapons){
+    if(!weaponStats[w]){
+        weaponStats[w] = { "0乙":0, "1乙":0, "2乙":0, "3乙":0 };
+    }
+}
 
 // ----- ガチャを回す -----
 function rollGacha() {
@@ -175,13 +183,6 @@ function rollGacha() {
         if(weapon==="片手剣"){
             document.getElementById("weapon").textContent += " ✨片手剣チャンス！✨";
         }
-
-        if(!weaponStats[weapon]){
-            weaponStats[weapon] = { "0乙":0, "1乙":0, "2乙":0, "3乙":0 };
-        }
-
-        let key = deathCount >=3 ? "3乙" : deathCount+"乙";
-        weaponStats[weapon][key]++;
     } else {
         document.getElementById("weapon").textContent="";
         lastWeapon="";
@@ -219,6 +220,12 @@ function rollGacha() {
 
     lastResult = weapon+" × "+monster+" × "+rule;
 
+    // 統計更新（0〜3乙）
+    if(lastWeapon){
+        let key = deathCount >= 3 ? "3乙" : deathCount+"乙";
+        weaponStats[lastWeapon][key]++;
+    }
+
     deathCount = 0;
     document.getElementById("deathCounter").textContent = "現在：0乙";
 
@@ -238,17 +245,19 @@ function addDeath(){
 
 // ----- 統計更新 -----
 function drawStats(){
+    // 武器統計
     let ws = document.getElementById("weaponStats");
     ws.innerHTML = "";
-    for(let w in weaponStats){
+    for(let w of weapons){
         let s = weaponStats[w];
         ws.innerHTML += `${w} → 0乙:${s["0乙"]} 1乙:${s["1乙"]} 2乙:${s["2乙"]} 失敗:${s["3乙"]}\n`;
     }
 
+    // 死亡率ランキング
     let ds = document.getElementById("deathStats");
     ds.innerHTML = "";
     let ranking = [];
-    for(let w in weaponStats){
+    for(let w of weapons){
         let s = weaponStats[w];
         let total = s["0乙"] + s["1乙"] + s["2乙"] + s["3乙"];
         let fail = s["3乙"];
@@ -281,6 +290,7 @@ function resetStats(){
     drawStats();
 }
 
+// 初期表示
 drawStats();
 </script>
 
