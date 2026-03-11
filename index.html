@@ -139,227 +139,61 @@ height:20px;
 </div>
 
 <script>
-  let weaponStats = {}; // 武器ごとの統計 { "片手剣": {success:0, fail:0}, ... }
-  let deathCount=0;
+ let deathCount = 0;
+let lastWeapon = "";
+let weaponStats = {}; // 武器ごとの統計
+const weapons = ["片手剣","太刀","大剣","ハンマー","ランス"]; // 好きな武器リスト
 
-function addDeath(){
+function rollGacha() {
+    // 武器決定
+    let weapon = weapons[Math.floor(Math.random()*weapons.length)];
+    lastWeapon = weapon;
+    document.getElementById("weapon").textContent = "武器：" + weapon;
 
-deathCount++;
-
-document.getElementById("deathCounter").textContent="現在："+deathCount+"乙";
-
-if(deathCount>=3){
-alert("💀 クエスト失敗！");
-}
-  // 3乙で自動失敗判定
-
-    // 統計に反映（3乙で失敗）
-    if(lastWeapon){
-        weaponStats[lastWeapon].fail++;
+    if(weapon === "片手剣"){
+        document.getElementById("weapon").textContent += " ✨片手剣チャンス！✨";
     }
 
-    updateWeaponStats(); // 画面に死亡率表示
+    // 武器統計初期化
+    if(!weaponStats[weapon]){
+        weaponStats[weapon] = { success: 0, fail: 0 };
+    }
+
+    // 成功判定（2乙以下で成功）
+    if(deathCount < 3){
+        weaponStats[weapon].success++;
+    }
+
+    updateWeaponStats();
+
+    // 乙カウンターリセット
+    deathCount = 0;
+    document.getElementById("deathCounter").textContent = "現在：0乙";
 }
 
-}
+function addDeath() {
+    deathCount++;
+    document.getElementById("deathCounter").textContent = "現在：" + deathCount + "乙";
 
-const weapons=[
-"大剣","太刀","片手剣","双剣","ハンマー","狩猟笛","ランス",
-"ガンランス","スラッシュアックス","チャージアックス",
-"操虫棍","ライトボウガン","ヘビィボウガン","弓"
-];
-
-const monstersAll=[
-"リオレウス","リオレイア","ナルガクルガ","ジンオウガ",
-"ゴシャハギ","マガイマガド","バゼルギウス",
-"メルゼナ","ルナガロン","ガランゴルム"
-];
-
-const monstersDanger=[
-"激昂ラージャン","紅蓮滾るバゼルギウス","奇しき赫耀のバルファルク"
-];
-
-const easyRules=["閃光禁止","砥石3回"];
-const normalRules=["回復禁止","捕獲禁止"];
-const hellRules=["回復禁止","回避禁止","装備なし","裸で討伐","アイテム禁止"];
-const jokeRules=["オトモ任せ","操竜のみ","粉塵係"];
-
-let weaponStats=JSON.parse(localStorage.getItem("weaponStats")||"{}");
-let monsterStats=JSON.parse(localStorage.getItem("monsterStats")||"{}");
-let deathStats=JSON.parse(localStorage.getItem("deathStats")||"{}");
-
-let lastWeapon="";
-let lastMonster="";
-let lastResult="";
-
-function rollGacha(){
-
-let weapon="";
-let monster="";
-let rule="";
-
-if(document.getElementById("weaponToggle").value==="on"){
-weapon=weapons[Math.floor(Math.random()*weapons.length)];
-lastWeapon=weapon;
-document.getElementById("weapon").textContent="武器："+weapon;
-
-if(weapon==="片手剣"){
-document.getElementById("weapon").textContent+=" ✨片手剣チャンス！✨";
-}
-
-weaponStats[weapon]=(weaponStats[weapon]||0)+1;
-
-}else{
-document.getElementById("weapon").textContent="";
-lastWeapon="";
-}
-
-if(document.getElementById("monsterToggle").value==="on"){
-
-let list=monstersAll;
-
-if(document.getElementById("monsterType").value==="danger"){
-list=monstersDanger;
-}
-
-monster=list[Math.floor(Math.random()*list.length)];
-lastMonster=monster;
-
-document.getElementById("monster").textContent="モンスター："+monster;
-
-monsterStats[monster]=(monsterStats[monster]||0)+1;
-
-}else{
-document.getElementById("monster").textContent="";
-lastMonster="";
-}
-
-if(document.getElementById("ruleToggle").value==="on"){
-
-let diff=document.getElementById("difficulty").value;
-let arr=[];
-
-if(diff==="easy")arr=easyRules;
-if(diff==="normal")arr=normalRules;
-if(diff==="hell")arr=hellRules;
-if(diff==="joke")arr=jokeRules;
-
-rule=arr[Math.floor(Math.random()*arr.length)];
-document.getElementById("rule").textContent="縛り："+rule;
-
-}else{
-document.getElementById("rule").textContent="";
-}
-
-lastResult=weapon+" × "+monster+" × "+rule;
-
-saveStats();
-drawStats();
-
-// 武器統計用オブジェクト初期化
-if(!weaponStats[weapon]){
-    weaponStats[weapon] = { success: 0, fail: 0 };
-}
-  function markSuccess() {
-    if(lastWeapon && deathCount < 3){
-        weaponStats[lastWeapon].success++;
+    if(deathCount >= 3){
+        alert("💀 クエスト失敗！");
+        if(lastWeapon){
+            weaponStats[lastWeapon].fail++;
+        }
         updateWeaponStats();
     }
 }
-deathCount = 0;
-document.getElementById("deathCounter").textContent = "現在：0乙";}
 
-function success(){
-addHistory("成功");
+function updateWeaponStats(){
+    let statText = "";
+    for(let w in weaponStats){
+        let s = weaponStats[w].success;
+        let f = weaponStats[w].fail;
+        let rate = (s + f > 0) ? Math.round(f / (s + f) * 100) : 0;
+        statText += `${w} → 成功:${s} 失敗:${f} 死亡率:${rate}%\n`;
+    }
+    document.getElementById("weaponStats").textContent = statText;
 }
-
-function fail(){
-
-if(lastMonster){
-deathStats[lastMonster]=(deathStats[lastMonster]||0)+1;
-}
-
-addHistory("失敗");
-
-saveStats();
-drawStats();
-
-}
-
-function addHistory(result){
-
-let li=document.createElement("li");
-li.textContent=lastResult+" → "+result;
-document.getElementById("history").appendChild(li);
-
-}
-
-function saveStats(){
-
-localStorage.setItem("weaponStats",JSON.stringify(weaponStats));
-localStorage.setItem("monsterStats",JSON.stringify(monsterStats));
-localStorage.setItem("deathStats",JSON.stringify(deathStats));
-
-}
-
-function drawStats(){
-
-let ws=document.getElementById("weaponStats");
-ws.innerHTML="";
-
-for(let w in weaponStats){
-
-let div=document.createElement("div");
-div.className="bar";
-div.innerHTML=w+" ("+weaponStats[w]+")<span style='width:"+weaponStats[w]*20+"px'></span>";
-
-ws.appendChild(div);
-
-}
-
-let ms=document.getElementById("monsterStats");
-ms.innerHTML="";
-
-for(let m in monsterStats){
-
-let div=document.createElement("div");
-div.className="bar";
-div.innerHTML=m+" ("+monsterStats[m]+")<span style='width:"+monsterStats[m]*20+"px'></span>";
-
-ms.appendChild(div);
-
-}
-
-let ds=document.getElementById("deathStats");
-ds.innerHTML="";
-
-let sorted=Object.entries(deathStats).sort((a,b)=>b[1]-a[1]);
-
-sorted.forEach(([m,v])=>{
-let li=document.createElement("li");
-li.textContent=m+" : "+v+"回失敗";
-ds.appendChild(li);
-});
-
-}
-
-function resetStats(){
-
-weaponStats={};
-monsterStats={};
-deathStats={};
-
-localStorage.clear();
-
-drawStats();
-
-}
-
-drawStats();
-  const today=new Date().toDateString();
-let weapon=weapons[Math.floor(Math.random()*weapons.length)];
-document.getElementById("dailyWeapon").textContent="今日の武器："+weapon;
-
 </script>
 
 </body>
