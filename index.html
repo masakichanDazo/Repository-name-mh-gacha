@@ -2,153 +2,38 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>モンハンガチャ！</title>
+<title>MHガチャ</title>
 <style>
-body{
-background:#111;
-color:#eee;
-font-family:sans-serif;
-text-align:center;
-padding:40px;
-}
-
-h1{
-color:#d4af37;
-font-size:40px;
-}
-
-button{
-padding:10px 20px;
-margin:10px;
-font-size:18px;
-background:#d4af37;
-border:none;
-border-radius:6px;
-cursor:pointer;
-}
-
-select{
-padding:6px;
-margin:6px;
-}
-
-.result{
-font-size:28px;
-margin-top:20px;
-color:#7bd6ff;
-}
-
-.rule{
-color:#ff7b7b;
-font-size:20px;
-}
-
-.section{
-margin-top:40px;
-}
-
-.bar{
-background:#444;
-margin:4px auto;
-width:300px;
-text-align:left;
-}
-
-.bar span{
-display:block;
-background:#7bd6ff;
-height:20px;
-}
-
+  body{font-family:sans-serif; padding:10px;}
+  #weaponStats{margin-top:10px;}
 </style>
 </head>
-
 <body>
 
-<h1>モンハンガチャ！</h1>
-  <h2 id="dailyWeapon"></h2>
+<h2>モンハンガチャ</h2>
 
-<div>
-
-武器ガチャ
-<select id="weaponToggle">
-<option value="on">ON</option>
-<option value="off">OFF</option>
-</select>
-
-モンスターガチャ
-<select id="monsterToggle">
-<option value="off">OFF</option>
-<option value="on">ON</option>
-</select>
-
-<select id="monsterType">
-<option value="all">全大型</option>
-<option value="danger">危険モンスター</option>
-</select>
-
-</div>
-
-<div>
-
-縛り
-<select id="ruleToggle">
-<option value="off">なし</option>
-<option value="on">あり</option>
-</select>
-
-<select id="difficulty">
-<option value="easy">ゆるめ</option>
-<option value="normal">ふつう</option>
-<option value="hell">地獄</option>
-<option value="joke">ネタ</option>
-</select>
-
-</div>
-
-<button onclick="rollGacha()">ガチャを回す！</button>
-
-<div class="result" id="weapon"></div>
-<div class="result" id="monster"></div>
-<div class="rule" id="rule"></div>
-
-<div>
-<h3 id="deathCounter">現在：0乙</h3>
-<button onclick="addDeath()">💀 1乙</button>
+<button onclick="rollGacha()">ガチャを回す</button>
+<button onclick="addDeath()">乙カウント</button>
 <button onclick="resetStats()">統計リセット</button>
-</div>
 
-<div class="section">
-<h2>履歴</h2>
-<ul id="history"></ul>
-</div>
+<p id="weapon"></p>
+<p id="monster"></p>
+<p id="rule"></p>
+<p id="deathCounter">現在：0乙</p>
 
-<div class="section">
-<h2>武器統計</h2>
+<h3>武器統計</h3>
 <div id="weaponStats"></div>
-</div>
-
-<div class="section">
-<h2>モンスター統計</h2>
-<div id="monsterStats"></div>
-</div>
-
-<div class="section">
-<h2>死亡率ランキング</h2>
-<ul id="deathStats"></ul>
-</div>
 
 <script>
 let deathCount = 0;
 let lastWeapon = "";
-let lastMonster = "";
 
-// ----- 武器 -----
+// 武器
 const weapons = ["大剣","太刀","片手剣","双剣","ハンマー","狩猟笛","ランス",
 "ガンランス","スラッシュアックス","チャージアックス",
 "操虫棍","ライトボウガン","ヘビィボウガン","弓"];
 
-// ----- モンスター（ライズ＋サンブレイク主要モンスター） -----
+// モンスター（ライズ＋サンブレイク大型）
 const monstersAll = [
 "アオアシラ","アルメッドロン","アマツマガツチ","ウルクスス",
 "イソネミクニ","イヴェルカーナ","エスピナス","オロミドロ",
@@ -165,132 +50,78 @@ const monstersDanger = [
 "ラージャン","セルレギオス","イヴェルカーナ"
 ];
 
-// ----- 縛り -----
+// 縛り（簡易版）
 const easyRules=["閃光禁止","砥石3回"];
 const normalRules=["回復禁止","捕獲禁止"];
 const hellRules=["回復禁止","回避禁止","装備なし","裸で討伐","アイテム禁止"];
 const jokeRules=["オトモ任せ","操竜のみ","粉塵係"];
 
-// ----- 統計 -----
+// 統計
 let weaponStats = JSON.parse(localStorage.getItem("weaponStats")||"{}");
-let monsterStats = JSON.parse(localStorage.getItem("monsterStats")||"{}");
 
-// ----- ガチャを回す -----
-function rollGacha() {
-    let weapon="", monster="", rule="";
+// ----- ガチャ -----
+function rollGacha(){
     deathCount = 0;
     document.getElementById("deathCounter").textContent = "現在：0乙";
 
     // 武器
-    if(document.getElementById("weaponToggle").value==="on"){
-        weapon = weapons[Math.floor(Math.random()*weapons.length)];
-        lastWeapon = weapon;
-        document.getElementById("weapon").textContent = "武器：" + weapon;
-        if(weapon==="片手剣") document.getElementById("weapon").textContent += " ✨片手剣チャンス！✨";
+    let weapon="";
+    weapon = weapons[Math.floor(Math.random()*weapons.length)];
+    lastWeapon = weapon;
+    document.getElementById("weapon").textContent = "武器：" + weapon;
+    if(weapon==="片手剣") document.getElementById("weapon").textContent += " ✨片手剣チャンス！✨";
 
-        if(!weaponStats[weapon]){
-            weaponStats[weapon] = { "0乙":0, "1乙":0, "2乙":0, "3乙":0 };
-        }
-    } else {
-        document.getElementById("weapon").textContent="";
-        lastWeapon="";
-    }
+    if(!weaponStats[weapon]) weaponStats[weapon] = 0;
+    weaponStats[weapon]++;
 
     // モンスター
-    if(document.getElementById("monsterToggle").value==="on"){
-        let list = document.getElementById("monsterType").value==="danger" ? monstersDanger : monstersAll;
-        monster = list[Math.floor(Math.random()*list.length)];
-        lastMonster = monster;
-        document.getElementById("monster").textContent="モンスター："+monster;
-        monsterStats[monster]=(monsterStats[monster]||0)+1;
-    } else {
-        document.getElementById("monster").textContent="";
-        lastMonster="";
-    }
+    let list = monstersAll;
+    let monster = list[Math.floor(Math.random()*list.length)];
+    document.getElementById("monster").textContent = "モンスター：" + monster;
 
     // 縛り
-    if(document.getElementById("ruleToggle").value==="on"){
-        let diff=document.getElementById("difficulty").value;
-        let arr=[];
-        if(diff==="easy") arr=easyRules;
-        if(diff==="normal") arr=normalRules;
-        if(diff==="hell") arr=hellRules;
-        if(diff==="joke") arr=jokeRules;
-        rule = arr[Math.floor(Math.random()*arr.length)];
-        document.getElementById("rule").textContent="縛り："+rule;
-    } else {
-        document.getElementById("rule").textContent="";
-    }
+    let diff = "normal"; // 仮に固定、自由に変更可
+    let arr = normalRules;
+    let rule = arr[Math.floor(Math.random()*arr.length)];
+    document.getElementById("rule").textContent = "縛り：" + rule;
 
     saveStats();
     drawStats();
 }
 
-// ----- 死亡カウント -----
+// ----- 乙カウント -----
 function addDeath(){
-    if(!lastWeapon) return;
-    if(deathCount >= 3) return;
-
+    if(deathCount >=3) return;
     deathCount++;
-    document.getElementById("deathCounter").textContent = "現在："+deathCount+"乙";
-
+    document.getElementById("deathCounter").textContent = "現在：" + deathCount + "乙";
     if(deathCount >=3) alert("💀 クエスト失敗！");
-
-    let key = deathCount>=3?"3乙":deathCount+"乙";
-    weaponStats[lastWeapon][key]++;
-
-    saveStats();
-    drawStats();
 }
 
-// ----- 統計描画（数値表示のみ） -----
+// ----- 統計描画 -----
 function drawStats(){
     let ws = document.getElementById("weaponStats");
     ws.innerHTML = "";
     for(let w of Object.keys(weaponStats)){
-        let s = weaponStats[w];
-        let total = s["0乙"] + s["1乙"] + s["2乙"] + s["3乙"];
-        if(total===0) continue;
-        ws.innerHTML += `${w} → 0乙:${s["0乙"]} 1乙:${s["1乙"]} 2乙:${s["2乙"]} 失敗:${s["3乙"]} (計:${total})<br>`;
+        ws.innerHTML += `${w} → ${weaponStats[w]}回<br>`;
     }
-
-    let ds = document.getElementById("deathStats");
-    ds.innerHTML = "<b>💀 死亡率ランキング 💀</b><br>";
-    let ranking = [];
-    for(let w of Object.keys(weaponStats)){
-        let s = weaponStats[w];
-        let total = s["0乙"] + s["1乙"] + s["2乙"] + s["3乙"];
-        if(total===0) continue;
-        let fail = s["3乙"];
-        let rate = Math.round(fail/total*100);
-        ranking.push({weapon:w, rate:rate});
-    }
-    ranking.sort((a,b)=>b.rate - a.rate);
-    ranking.forEach((r,i)=>{
-        ds.innerHTML += `${i+1}. ${r.weapon} → ${r.rate}%<br>`;
-    });
 }
 
 // ----- 保存 -----
 function saveStats(){
     localStorage.setItem("weaponStats", JSON.stringify(weaponStats));
-    localStorage.setItem("monsterStats", JSON.stringify(monsterStats));
 }
 
 // ----- リセット -----
 function resetStats(){
     weaponStats={};
-    monsterStats={};
     localStorage.clear();
-    deathCount = 0;
-    lastWeapon = "";
-    lastMonster = "";
-    document.getElementById("deathCounter").textContent = "現在：0乙";
+    deathCount=0;
+    lastWeapon="";
+    document.getElementById("deathCounter").textContent="現在：0乙";
     drawStats();
 }
 
 drawStats();
 </script>
-  
 </body>
 </html>
