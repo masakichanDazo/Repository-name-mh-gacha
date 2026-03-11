@@ -164,7 +164,7 @@ let weaponStats = JSON.parse(localStorage.getItem("weaponStats")||"{}");
 let monsterStats = JSON.parse(localStorage.getItem("monsterStats")||"{}");
 let deathStats = JSON.parse(localStorage.getItem("deathStats")||"{}");
 
-// 欠けている武器を初期化
+// 武器統計の初期化
 for(let w of weapons){
     if(!weaponStats[w]){
         weaponStats[w] = { "0乙":0, "1乙":0, "2乙":0, "3乙":0 };
@@ -174,6 +174,10 @@ for(let w of weapons){
 // ----- ガチャを回す -----
 function rollGacha() {
     let weapon="", monster="", rule="";
+
+    // まず死亡カウントをリセット
+    deathCount = 0;
+    document.getElementById("deathCounter").textContent = "現在：0乙";
 
     // 武器
     if(document.getElementById("weaponToggle").value==="on"){
@@ -220,27 +224,25 @@ function rollGacha() {
 
     lastResult = weapon+" × "+monster+" × "+rule;
 
-    // ガチャ結果表示後に統計更新
-    if(lastWeapon){
-        let key = deathCount >= 3 ? "3乙" : deathCount + "乙";
-        weaponStats[lastWeapon][key]++;
-    }
-
-    deathCount = 0;
-    document.getElementById("deathCounter").textContent = "現在：0乙";
-
     saveStats();
     drawStats();
 }
 
 // ----- 死亡カウント -----
 function addDeath(){
+    if(!lastWeapon) return; // 武器が選ばれてない場合は無視
     deathCount++;
     document.getElementById("deathCounter").textContent = "現在："+deathCount+"乙";
 
     if(deathCount >=3){
         alert("💀 クエスト失敗！");
     }
+
+    // 武器統計に反映
+    let key = deathCount >=3 ? "3乙" : deathCount + "乙";
+    weaponStats[lastWeapon][key]++;
+    saveStats();
+    drawStats();
 }
 
 // ----- 統計更新（グラフ表示） -----
@@ -251,22 +253,21 @@ function drawStats(){
     for(let w of weapons){
         let s = weaponStats[w];
         let total = s["0乙"] + s["1乙"] + s["2乙"] + s["3乙"];
-        if(total===0) total=1; // 割合計算のゼロ除算防止
+        if(total===0) total=1;
 
-        // 棒グラフ作成
-        let bar0 = Math.round(s["0乙"]/total*100);
-        let bar1 = Math.round(s["1乙"]/total*100);
-        let bar2 = Math.round(s["2乙"]/total*100);
-        let bar3 = Math.round(s["3乙"]/total*100);
+        let bar0 = Math.round(s["0乙"]/total*200);
+        let bar1 = Math.round(s["1乙"]/total*200);
+        let bar2 = Math.round(s["2乙"]/total*200);
+        let bar3 = Math.round(s["3乙"]/total*200);
 
         ws.innerHTML += `
         <div style="margin:4px 0;">
-            ${w} 
-            <div style="display:flex; height:20px; width:200px; border:1px solid #000;">
-                <div style="width:${bar0}%; background-color:#4caf50;" title="0乙"></div>
-                <div style="width:${bar1}%; background-color:#ffeb3b;" title="1乙"></div>
-                <div style="width:${bar2}%; background-color:#ff9800;" title="2乙"></div>
-                <div style="width:${bar3}%; background-color:#f44336;" title="3乙"></div>
+            ${w}
+            <div style="display:flex; height:20px; border:1px solid #000; width:200px; box-sizing:border-box;">
+                <div style="width:${bar0}px; background-color:#4caf50;" title="0乙"></div>
+                <div style="width:${bar1}px; background-color:#ffeb3b;" title="1乙"></div>
+                <div style="width:${bar2}px; background-color:#ff9800;" title="2乙"></div>
+                <div style="width:${bar3}px; background-color:#f44336;" title="3乙"></div>
             </div>
         </div>`;
     }
@@ -287,8 +288,6 @@ function drawStats(){
     ranking.forEach((r,i)=>{
         ds.innerHTML += `${i+1}. ${r.weapon} → ${r.rate}%<br>`;
     });
-
-    saveStats();
 }
 
 // ----- ローカル保存 -----
