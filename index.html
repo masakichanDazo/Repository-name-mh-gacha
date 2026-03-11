@@ -139,6 +139,7 @@ height:20px;
 </div>
 
 <script>
+  let weaponStats = {}; // 武器ごとの統計 { "片手剣": {success:0, fail:0}, ... }
   let deathCount=0;
 
 function addDeath(){
@@ -149,6 +150,15 @@ document.getElementById("deathCounter").textContent="現在："+deathCount+"乙"
 
 if(deathCount>=3){
 alert("💀 クエスト失敗！");
+}
+  // 3乙で自動失敗判定
+
+    // 統計に反映（3乙で失敗）
+    if(lastWeapon){
+        weaponStats[lastWeapon].fail++;
+    }
+
+    updateWeaponStats(); // 画面に死亡率表示
 }
 
 }
@@ -246,7 +256,16 @@ lastResult=weapon+" × "+monster+" × "+rule;
 saveStats();
 drawStats();
 
-
+// 武器統計用オブジェクト初期化
+if(!weaponStats[weapon]){
+    weaponStats[weapon] = { success: 0, fail: 0 };
+}
+  function markSuccess() {
+    if(lastWeapon && deathCount < 3){
+        weaponStats[lastWeapon].success++;
+        updateWeaponStats();
+    }
+}
 deathCount = 0;
 document.getElementById("deathCounter").textContent = "現在：0乙";}
 
