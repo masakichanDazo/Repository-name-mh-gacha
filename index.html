@@ -180,6 +180,7 @@ function rollGacha() {
             document.getElementById("weapon").textContent += " ✨片手剣チャンス！✨";
         }
 
+        // 初出の武器だけ統計初期化
         if(!weaponStats[weapon]){
             weaponStats[weapon] = { "0乙":0, "1乙":0, "2乙":0, "3乙":0 };
         }
@@ -227,37 +228,37 @@ function rollGacha() {
 
 // ----- 死亡カウント -----
 function addDeath(){
-    if(!lastWeapon) return; // 武器が選ばれてない場合は無視
+    if(!lastWeapon) return;
 
-    // すでに3乙なら増やさない
+    // 3乙以上はカウント不可
     if(deathCount >= 3) return;
 
     deathCount++;
     document.getElementById("deathCounter").textContent = "現在："+deathCount+"乙";
 
-    // 3乙になったらクエスト失敗
     if(deathCount >=3){
         alert("💀 クエスト失敗！");
     }
 
-    // 武器統計に反映
+    // 統計反映（3乙は失敗、0~2乙は成功扱い）
     let key = deathCount >=3 ? "3乙" : deathCount+"乙";
-
     weaponStats[lastWeapon][key]++;
+
     saveStats();
     drawStats();
 }
-// ----- 統計更新 -----
+
+// ----- 統計描画 -----
 function drawStats(){
     let ws = document.getElementById("weaponStats");
     ws.innerHTML = "";
 
-    // 出現した武器だけ描画
     for(let w of Object.keys(weaponStats)){
         let s = weaponStats[w];
         let total = s["0乙"]+s["1乙"]+s["2乙"]+s["3乙"];
         if(total===0) continue;
 
+        // 棒グラフ計算
         let bar0 = Math.round(s["0乙"]/total*200);
         let bar1 = Math.round(s["1乙"]/total*200);
         let bar2 = Math.round(s["2乙"]/total*200);
@@ -293,7 +294,7 @@ function drawStats(){
     });
 }
 
-// ----- ローカル保存 -----
+// ----- 保存 -----
 function saveStats(){
     localStorage.setItem("weaponStats", JSON.stringify(weaponStats));
     localStorage.setItem("monsterStats", JSON.stringify(monsterStats));
@@ -311,6 +312,6 @@ function resetStats(){
 
 drawStats();
 </script>
-
+  
 </body>
 </html>
