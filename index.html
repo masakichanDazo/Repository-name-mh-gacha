@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <title>MHガチャ</title>
 <style>
-  body{font-family:sans-serif; padding:10px;}
-  #weaponStats{margin-top:10px;}
+body{font-family:sans-serif; padding:10px;}
+#weaponStats{margin-top:10px;}
 </style>
 </head>
 <body>
@@ -13,20 +13,19 @@
 <h2>モンハンガチャ</h2>
 
 <button onclick="rollGacha()">ガチャを回す</button>
-<button onclick="addDeath()">乙カウント</button>
 <button onclick="resetStats()">統計リセット</button>
 
 <p id="weapon"></p>
 <p id="monster"></p>
 <p id="rule"></p>
-<p id="deathCounter">現在：0乙</p>
 
-<h3>武器統計</h3>
+<h3>武器統計（出た武器だけ）</h3>
 <div id="weaponStats"></div>
 
 <script>
-let deathCount = 0;
-let lastWeapon = "";
+// ガチャ回数カウント用
+let totalRolls = 0;
+let weaponStats = JSON.parse(localStorage.getItem("weaponStats")||"{}");
 
 // 武器
 const weapons = ["大剣","太刀","片手剣","双剣","ハンマー","狩猟笛","ランス",
@@ -56,45 +55,31 @@ const normalRules=["回復禁止","捕獲禁止"];
 const hellRules=["回復禁止","回避禁止","装備なし","裸で討伐","アイテム禁止"];
 const jokeRules=["オトモ任せ","操竜のみ","粉塵係"];
 
-// 統計
-let weaponStats = JSON.parse(localStorage.getItem("weaponStats")||"{}");
-
 // ----- ガチャ -----
 function rollGacha(){
-    deathCount = 0;
-    document.getElementById("deathCounter").textContent = "現在：0乙";
+    totalRolls++;
 
     // 武器
-    let weapon="";
-    weapon = weapons[Math.floor(Math.random()*weapons.length)];
-    lastWeapon = weapon;
+    let weapon = weapons[Math.floor(Math.random()*weapons.length)];
     document.getElementById("weapon").textContent = "武器：" + weapon;
     if(weapon==="片手剣") document.getElementById("weapon").textContent += " ✨片手剣チャンス！✨";
 
-    if(!weaponStats[weapon]) weaponStats[weapon] = 0;
+    if(!weaponStats[weapon]) weaponStats[weapon]=0;
     weaponStats[weapon]++;
 
     // モンスター
-    let list = monstersAll;
-    let monster = list[Math.floor(Math.random()*list.length)];
+    let monsterList = monstersAll;
+    let monster = monsterList[Math.floor(Math.random()*monsterList.length)];
     document.getElementById("monster").textContent = "モンスター：" + monster;
 
     // 縛り
-    let diff = "normal"; // 仮に固定、自由に変更可
-    let arr = normalRules;
-    let rule = arr[Math.floor(Math.random()*arr.length)];
+    let diff = "normal"; // 任意で変更可
+    let ruleArr = normalRules;
+    let rule = ruleArr[Math.floor(Math.random()*ruleArr.length)];
     document.getElementById("rule").textContent = "縛り：" + rule;
 
     saveStats();
     drawStats();
-}
-
-// ----- 乙カウント -----
-function addDeath(){
-    if(deathCount >=3) return;
-    deathCount++;
-    document.getElementById("deathCounter").textContent = "現在：" + deathCount + "乙";
-    if(deathCount >=3) alert("💀 クエスト失敗！");
 }
 
 // ----- 統計描画 -----
@@ -102,22 +87,23 @@ function drawStats(){
     let ws = document.getElementById("weaponStats");
     ws.innerHTML = "";
     for(let w of Object.keys(weaponStats)){
-        ws.innerHTML += `${w} → ${weaponStats[w]}回<br>`;
+        let count = weaponStats[w];
+        let rate = totalRolls>0 ? (count/totalRolls*100).toFixed(1) : 0;
+        ws.innerHTML += `${w} → ${count}回 (${rate}%)<br>`;
     }
 }
 
 // ----- 保存 -----
 function saveStats(){
     localStorage.setItem("weaponStats", JSON.stringify(weaponStats));
+    localStorage.setItem("totalRolls", totalRolls);
 }
 
 // ----- リセット -----
 function resetStats(){
     weaponStats={};
+    totalRolls=0;
     localStorage.clear();
-    deathCount=0;
-    lastWeapon="";
-    document.getElementById("deathCounter").textContent="現在：0乙";
     drawStats();
 }
 
