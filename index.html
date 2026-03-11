@@ -185,6 +185,9 @@ document.getElementById("weapon").textContent+=" ✨片手剣チャンス！✨"
 
 weaponStats[weapon]=(weaponStats[weapon]||0)+1;
 
+}else{
+document.getElementById("weapon").textContent="";
+lastWeapon="";
 }
 
 if(document.getElementById("monsterToggle").value==="on"){
@@ -202,6 +205,9 @@ document.getElementById("monster").textContent="モンスター："+monster;
 
 monsterStats[monster]=(monsterStats[monster]||0)+1;
 
+}else{
+document.getElementById("monster").textContent="";
+lastMonster="";
 }
 
 if(document.getElementById("ruleToggle").value==="on"){
