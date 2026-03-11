@@ -66,6 +66,7 @@ height:20px;
 <body>
 
 <h1>モンハンガチャ！</h1>
+  <h2 id="dailyWeapon"></h2>
 
 <div>
 
@@ -321,6 +322,9 @@ drawStats();
 }
 
 drawStats();
+  const today=new Date().toDateString();
+let weapon=weapons[Math.floor(Math.random()*weapons.length)];
+document.getElementById("dailyWeapon").textContent="今日の武器："+weapon;
 
 </script>
 
