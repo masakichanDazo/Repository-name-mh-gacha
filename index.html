@@ -142,7 +142,6 @@ height:20px;
 let deathCount = 0;
 let lastWeapon = "";
 let lastMonster = "";
-let lastResult = "";
 
 const weapons = ["大剣","太刀","片手剣","双剣","ハンマー","狩猟笛","ランス",
 "ガンランス","スラッシュアックス","チャージアックス",
@@ -159,15 +158,12 @@ const normalRules=["回復禁止","捕獲禁止"];
 const hellRules=["回復禁止","回避禁止","装備なし","裸で討伐","アイテム禁止"];
 const jokeRules=["オトモ任せ","操竜のみ","粉塵係"];
 
-// ローカル読み込み
 let weaponStats = JSON.parse(localStorage.getItem("weaponStats")||"{}");
 let monsterStats = JSON.parse(localStorage.getItem("monsterStats")||"{}");
-let deathStats = JSON.parse(localStorage.getItem("deathStats")||"{}");
 
 // ----- ガチャを回す -----
 function rollGacha() {
     let weapon="", monster="", rule="";
-
     deathCount = 0;
     document.getElementById("deathCounter").textContent = "現在：0乙";
 
@@ -184,7 +180,6 @@ function rollGacha() {
         if(!weaponStats[weapon]){
             weaponStats[weapon] = { "0乙":0, "1乙":0, "2乙":0, "3乙":0 };
         }
-
     } else {
         document.getElementById("weapon").textContent="";
         lastWeapon="";
@@ -199,7 +194,6 @@ function rollGacha() {
         monster = list[Math.floor(Math.random()*list.length)];
         lastMonster = monster;
         document.getElementById("monster").textContent="モンスター："+monster;
-
         monsterStats[monster]=(monsterStats[monster]||0)+1;
     } else {
         document.getElementById("monster").textContent="";
@@ -220,8 +214,6 @@ function rollGacha() {
         document.getElementById("rule").textContent="";
     }
 
-    lastResult = weapon+" × "+monster+" × "+rule;
-
     saveStats();
     drawStats();
 }
@@ -230,9 +222,7 @@ function rollGacha() {
 function addDeath(){
     if(!lastWeapon) return;
 
-    // 3乙以上はカウント不可
-    if(deathCount >= 3) return;
-
+    if(deathCount >= 3) return; // 3乙以上はカウントしない
     deathCount++;
     document.getElementById("deathCounter").textContent = "現在："+deathCount+"乙";
 
@@ -240,7 +230,6 @@ function addDeath(){
         alert("💀 クエスト失敗！");
     }
 
-    // 統計反映（3乙は失敗、0~2乙は成功扱い）
     let key = deathCount >=3 ? "3乙" : deathCount+"乙";
     weaponStats[lastWeapon][key]++;
 
@@ -258,7 +247,6 @@ function drawStats(){
         let total = s["0乙"]+s["1乙"]+s["2乙"]+s["3乙"];
         if(total===0) continue;
 
-        // 棒グラフ計算
         let bar0 = Math.round(s["0乙"]/total*200);
         let bar1 = Math.round(s["1乙"]/total*200);
         let bar2 = Math.round(s["2乙"]/total*200);
@@ -298,15 +286,17 @@ function drawStats(){
 function saveStats(){
     localStorage.setItem("weaponStats", JSON.stringify(weaponStats));
     localStorage.setItem("monsterStats", JSON.stringify(monsterStats));
-    localStorage.setItem("deathStats", JSON.stringify(deathStats));
 }
 
 // ----- リセット -----
 function resetStats(){
     weaponStats={};
     monsterStats={};
-    deathStats={};
     localStorage.clear();
+    deathCount = 0;
+    lastWeapon = "";
+    lastMonster = "";
+    document.getElementById("deathCounter").textContent = "現在：0乙";
     drawStats();
 }
 
